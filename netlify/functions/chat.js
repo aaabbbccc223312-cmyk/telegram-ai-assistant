@@ -1,9 +1,7 @@
 export default async (req) => {
   if (req.method !== "POST") {
     return json(
-      {
-        error: "Method not allowed."
-      },
+      { error: "Method not allowed." },
       405
     );
   }
@@ -23,31 +21,32 @@ export default async (req) => {
 
     if (!message) {
       return json(
-        {
-          error: "Please enter a message."
-        },
+        { error: "Please enter a message." },
         400
       );
     }
 
     const apiKey =
-      process.env.OPENAI_API_KEY;
+      process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       console.error(
-        "OPENAI_API_KEY is missing."
+        "GEMINI_API_KEY is missing."
       );
 
       return json(
         {
           error:
-            "OPENAI_API_KEY is not configured in Netlify."
+            "Gemini API key is not configured in Netlify."
         },
         500
       );
     }
 
-    const recentConversation =
+    /*
+     * Keep the conversation short.
+     */
+    const recent =
       conversation
         .filter(
           (item) =>
@@ -58,102 +57,138 @@ export default async (req) => {
             ) &&
             typeof item.content === "string"
         )
-        .slice(-12);
+        .slice(-10);
 
-    const input =
-      recentConversation.length > 0
-        ? recentConversation
-        : [
-            {
-              role: "user",
-              content: message
-            }
-          ];
+    /*
+     * Convert our frontend roles to Gemini roles.
+     */
+    const contents = recent.map(
+      (item) => ({
+        role:
+          item.role === "assistant"
+            ? "model"
+            : "user",
 
-    const response =
-      await fetch(
-        "https://api.openai.com/v1/responses",
-        {
-          method: "POST",
+        parts: [
+          {
+            text: item.content
+          }
+        ]
+      })
+    );
 
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization":
-              `Bearer ${apiKey}`
+    /*
+     * Make sure the current message exists even if
+     * the frontend conversation is empty.
+     */
+    if (
+      contents.length === 0 ||
+      contents[contents.length - 1].role !==
+        "user"
+    ) {
+      contents.push({
+        role: "user",
+        parts: [
+          {
+            text: message
+          }
+        ]
+      });
+    }
+
+    /*
+     * Gemini API endpoint.
+     *
+     * Gemini's current API uses the x-goog-api-key
+     * header for authentication.
+     */
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
+        },
+
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text:
+                  "You are a helpful AI assistant inside a Telegram Mini App. " +
+                  "Answer clearly and naturally. " +
+                  "Help with questions, writing, rewriting, summarizing, translation, " +
+                  "brainstorming, explanations, and everyday tasks. " +
+                  "Be concise by default, but provide detail when useful."
+              }
+            ]
           },
 
-          body: JSON.stringify({
-            model: "gpt-5.6",
+          contents,
 
-            instructions:
-              "You are a helpful AI assistant inside a Telegram Mini App. " +
-              "Answer clearly and naturally. " +
-              "Help with questions, writing, rewriting, summarizing, translation, " +
-              "brainstorming and explanations. " +
-              "Be concise by default.",
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1500
+          }
+        })
+      }
+    );
 
-            input,
-
-            store: false
-          })
-        }
-      );
-
-    const rawBody =
+    const raw =
       await response.text();
 
     /*
-     * OpenAI rejected the request.
+     * API error
      */
     if (!response.ok) {
       console.error(
-        "OpenAI status:",
+        "Gemini HTTP status:",
         response.status
       );
 
       console.error(
-        "OpenAI response:",
-        rawBody
+        "Gemini response:",
+        raw
       );
 
       let apiError = null;
 
       try {
         apiError =
-          JSON.parse(rawBody);
+          JSON.parse(raw);
       } catch {
-        // Response wasn't JSON.
+        // Ignore JSON parsing failure.
       }
 
-      const messageFromAPI =
+      const apiMessage =
         apiError?.error?.message ||
-        apiError?.error?.code ||
         "";
 
-      /*
-       * Give the frontend a useful but safe message.
-       */
       if (
-        response.status === 401
+        response.status === 400
       ) {
         return json(
           {
             error:
-              "OpenAI API key is invalid or not authorized."
+              apiMessage ||
+              "Gemini rejected the request."
           },
-          401
+          400
         );
       }
 
       if (
+        response.status === 401 ||
         response.status === 403
       ) {
         return json(
           {
             error:
-              "OpenAI API access was denied. Check your project permissions and API key."
+              "Gemini API key is invalid or does not have permission."
           },
-          403
+          response.status
         );
       }
 
@@ -163,7 +198,7 @@ export default async (req) => {
         return json(
           {
             error:
-              "OpenAI rejected the request because of rate limits or insufficient API billing/credits."
+              "Gemini rate limit or free-tier quota has been reached. Please try again later."
           },
           429
         );
@@ -172,8 +207,8 @@ export default async (req) => {
       return json(
         {
           error:
-            messageFromAPI ||
-            `OpenAI returned HTTP ${response.status}.`
+            apiMessage ||
+            `Gemini returned HTTP ${response.status}.`
         },
         502
       );
@@ -183,66 +218,56 @@ export default async (req) => {
 
     try {
       data =
-        JSON.parse(rawBody);
+        JSON.parse(raw);
     } catch {
       return json(
         {
           error:
-            "OpenAI returned an invalid response."
+            "Gemini returned an invalid response."
         },
         502
       );
     }
 
     /*
-     * Extract text from Responses API.
+     * Extract generated text.
      */
     let reply = "";
 
-    if (
-      typeof data.output_text ===
-      "string"
-    ) {
-      reply =
-        data.output_text.trim();
-    }
+    const candidates =
+      Array.isArray(data.candidates)
+        ? data.candidates
+        : [];
 
-    if (
-      !reply &&
-      Array.isArray(data.output)
+    for (
+      const candidate of candidates
     ) {
-      for (
-        const item of data.output
-      ) {
-        if (
-          item?.type === "message" &&
-          Array.isArray(item.content)
-        ) {
-          for (
-            const content of item.content
-          ) {
-            if (
-              content?.type ===
-                "output_text" &&
-              typeof content.text ===
-                "string"
-            ) {
-              reply +=
-                content.text;
-            }
-          }
-        }
+      const parts =
+        candidate?.content?.parts;
+
+      if (!Array.isArray(parts)) {
+        continue;
       }
 
-      reply =
-        reply.trim();
+      for (
+        const part of parts
+      ) {
+        if (
+          typeof part?.text === "string"
+        ) {
+          reply += part.text;
+        }
+      }
     }
+
+    reply =
+      reply.trim();
 
     if (!reply) {
       return json(
         {
           error:
-            "OpenAI returned an empty response."
+            "Gemini returned an empty response."
         },
         502
       );
@@ -256,6 +281,7 @@ export default async (req) => {
     );
 
   } catch (error) {
+
     console.error(
       "Netlify function error:",
       error
@@ -264,7 +290,7 @@ export default async (req) => {
     return json(
       {
         error:
-          "The Netlify AI function failed. Check the function logs."
+          "Something went wrong while contacting Gemini."
       },
       500
     );
@@ -273,7 +299,7 @@ export default async (req) => {
 
 
 /*
- * Small JSON response helper.
+ * JSON helper
  */
 function json(
   data,
