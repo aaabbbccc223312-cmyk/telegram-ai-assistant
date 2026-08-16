@@ -1,3 +1,5 @@
+import { GoogleGenAI } from "@google/genai";
+
 export default async (req) => {
   if (req.method !== "POST") {
     return json(
@@ -30,22 +32,20 @@ export default async (req) => {
       process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      console.error(
-        "GEMINI_API_KEY is missing."
-      );
-
       return json(
         {
           error:
-            "Gemini API key is not configured in Netlify."
+            "GEMINI_API_KEY is missing from Netlify."
         },
         500
       );
     }
 
-    /*
-     * Keep the conversation short.
-     */
+    const ai =
+      new GoogleGenAI({
+        apiKey
+      });
+
     const recent =
       conversation
         .filter(
@@ -59,9 +59,6 @@ export default async (req) => {
         )
         .slice(-10);
 
-    /*
-     * Convert our frontend roles to Gemini roles.
-     */
     const contents = recent.map(
       (item) => ({
         role:
@@ -77,14 +74,9 @@ export default async (req) => {
       })
     );
 
-    /*
-     * Make sure the current message exists even if
-     * the frontend conversation is empty.
-     */
     if (
       contents.length === 0 ||
-      contents[contents.length - 1].role !==
-        "user"
+      contents[contents.length - 1].role !== "user"
     ) {
       contents.push({
         role: "user",
@@ -96,172 +88,28 @@ export default async (req) => {
       });
     }
 
-    /*
-     * Gemini API endpoint.
-     *
-     * Gemini's current API uses the x-goog-api-key
-     * header for authentication.
-     */
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
-      {
-        method: "POST",
+    const response =
+      await ai.models.generateContent({
+        model: "gemini-3.6-flash",
 
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey
-        },
+        contents,
 
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [
-              {
-                text:
-                  "You are a helpful AI assistant inside a Telegram Mini App. " +
-                  "Answer clearly and naturally. " +
-                  "Help with questions, writing, rewriting, summarizing, translation, " +
-                  "brainstorming, explanations, and everyday tasks. " +
-                  "Be concise by default, but provide detail when useful."
-              }
-            ]
-          },
+        config: {
+          systemInstruction:
+            "You are a helpful AI assistant inside a Telegram Mini App. " +
+            "Answer clearly and naturally. " +
+            "Help with questions, writing, rewriting, summaries, translations, " +
+            "brainstorming and explanations. " +
+            "Be concise by default.",
 
-          contents,
+          maxOutputTokens: 1500,
 
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1500
-          }
-        })
-      }
-    );
-
-    const raw =
-      await response.text();
-
-    /*
-     * API error
-     */
-    if (!response.ok) {
-      console.error(
-        "Gemini HTTP status:",
-        response.status
-      );
-
-      console.error(
-        "Gemini response:",
-        raw
-      );
-
-      let apiError = null;
-
-      try {
-        apiError =
-          JSON.parse(raw);
-      } catch {
-        // Ignore JSON parsing failure.
-      }
-
-      const apiMessage =
-        apiError?.error?.message ||
-        "";
-
-      if (
-        response.status === 400
-      ) {
-        return json(
-          {
-            error:
-              apiMessage ||
-              "Gemini rejected the request."
-          },
-          400
-        );
-      }
-
-      if (
-        response.status === 401 ||
-        response.status === 403
-      ) {
-        return json(
-          {
-            error:
-              "Gemini API key is invalid or does not have permission."
-          },
-          response.status
-        );
-      }
-
-      if (
-        response.status === 429
-      ) {
-        return json(
-          {
-            error:
-              "Gemini rate limit or free-tier quota has been reached. Please try again later."
-          },
-          429
-        );
-      }
-
-      return json(
-        {
-          error:
-            apiMessage ||
-            `Gemini returned HTTP ${response.status}.`
-        },
-        502
-      );
-    }
-
-    let data;
-
-    try {
-      data =
-        JSON.parse(raw);
-    } catch {
-      return json(
-        {
-          error:
-            "Gemini returned an invalid response."
-        },
-        502
-      );
-    }
-
-    /*
-     * Extract generated text.
-     */
-    let reply = "";
-
-    const candidates =
-      Array.isArray(data.candidates)
-        ? data.candidates
-        : [];
-
-    for (
-      const candidate of candidates
-    ) {
-      const parts =
-        candidate?.content?.parts;
-
-      if (!Array.isArray(parts)) {
-        continue;
-      }
-
-      for (
-        const part of parts
-      ) {
-        if (
-          typeof part?.text === "string"
-        ) {
-          reply += part.text;
+          temperature: 0.7
         }
-      }
-    }
+      });
 
-    reply =
-      reply.trim();
+    const reply =
+      response.text?.trim();
 
     if (!reply) {
       return json(
@@ -281,16 +129,48 @@ export default async (req) => {
     );
 
   } catch (error) {
-
     console.error(
-      "Netlify function error:",
+      "Gemini function error:",
       error
     );
+
+    const message =
+      String(
+        error?.message || ""
+      );
+
+    if (
+      message.includes("401") ||
+      message.toLowerCase().includes("unauthenticated") ||
+      message.toLowerCase().includes("invalid api key")
+    ) {
+      return json(
+        {
+          error:
+            "Gemini authentication failed. Check the API key and Google AI Studio project."
+        },
+        401
+      );
+    }
+
+    if (
+      message.includes("429") ||
+      message.toLowerCase().includes("quota") ||
+      message.toLowerCase().includes("resource exhausted")
+    ) {
+      return json(
+        {
+          error:
+            "Gemini free-tier quota or rate limit has been reached."
+        },
+        429
+      );
+    }
 
     return json(
       {
         error:
-          "Something went wrong while contacting Gemini."
+          "Gemini could not process the request."
       },
       500
     );
@@ -298,13 +178,7 @@ export default async (req) => {
 };
 
 
-/*
- * JSON helper
- */
-function json(
-  data,
-  status
-) {
+function json(data, status) {
   return new Response(
     JSON.stringify(data),
     {
