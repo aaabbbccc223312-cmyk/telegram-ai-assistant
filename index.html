@@ -15,7 +15,6 @@
 
   <title>AI Assistant</title>
 
-  <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -29,10 +28,8 @@
       --button: #2481cc;
       --button-text: #ffffff;
       --border: rgba(127, 127, 127, 0.18);
-
       --green: #16a34a;
       --red: #dc2626;
-
       --radius: 18px;
     }
 
@@ -45,13 +42,10 @@
     body {
       margin: 0;
       padding: 0;
-
       width: 100%;
       min-height: 100%;
-
       background: var(--bg);
       color: var(--text);
-
       font-family:
         -apple-system,
         BlinkMacSystemFont,
@@ -74,7 +68,7 @@
     }
 
     /* ======================================================
-       BROWSER BLOCK SCREEN
+       BROWSER BLOCK
        ====================================================== */
 
     #browserGuard {
@@ -83,7 +77,6 @@
       z-index: 999999;
 
       display: flex;
-
       align-items: center;
       justify-content: center;
 
@@ -94,13 +87,11 @@
 
     .guard-card {
       width: min(370px, calc(100% - 40px));
-
       padding: 30px 24px;
 
       text-align: center;
 
       background: #1c2a35;
-
       border-radius: 24px;
 
       box-shadow:
@@ -118,7 +109,6 @@
       justify-content: center;
 
       border-radius: 50%;
-
       background: #229ed9;
     }
 
@@ -130,9 +120,7 @@
 
     .guard-title {
       margin: 0 0 12px;
-
       color: #ffffff;
-
       font-size: 24px;
       line-height: 1.2;
       font-weight: 800;
@@ -140,17 +128,15 @@
 
     .guard-text {
       margin: 0 auto;
-
       max-width: 310px;
 
       color: #d7e0e7;
-
       font-size: 14px;
       line-height: 1.55;
     }
 
     /* ======================================================
-       REAL TELEGRAM APP
+       APP
        ====================================================== */
 
     #app {
@@ -158,25 +144,12 @@
 
       width: 100%;
       max-width: 760px;
-
       margin: 0 auto;
 
       padding:
-        calc(
-          14px +
-          var(
-            --tg-content-safe-area-inset-top,
-            0px
-          )
-        )
+        calc(14px + var(--tg-content-safe-area-inset-top, 0px))
         14px
-        calc(
-          24px +
-          var(
-            --tg-content-safe-area-inset-bottom,
-            0px
-          )
-        );
+        calc(24px + var(--tg-content-safe-area-inset-bottom, 0px));
     }
 
     /* ======================================================
@@ -185,20 +158,16 @@
 
     .header {
       display: flex;
-
       align-items: center;
       justify-content: space-between;
 
       gap: 12px;
-
       margin-bottom: 16px;
     }
 
     .brand {
       display: flex;
-
       align-items: center;
-
       gap: 11px;
     }
 
@@ -210,54 +179,47 @@
       place-items: center;
 
       border-radius: 14px;
-
-      background:
-        rgba(36, 129, 204, 0.12);
+      background: rgba(36, 129, 204, 0.12);
 
       font-size: 23px;
     }
 
     .brand-title {
       margin: 0;
-
       font-size: 20px;
       font-weight: 800;
     }
 
     .brand-subtitle {
       margin: 3px 0 0;
-
       color: var(--hint);
-
       font-size: 12px;
     }
 
     .status-pill {
       display: inline-flex;
-
       align-items: center;
-
       gap: 7px;
 
       padding: 7px 10px;
-
       border-radius: 999px;
 
-      background:
-        rgba(22, 163, 74, 0.1);
-
+      background: rgba(22, 163, 74, 0.1);
       color: var(--green);
 
       font-size: 12px;
       font-weight: 700;
     }
 
+    .status-pill.listening {
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--red);
+    }
+
     .status-dot {
       width: 7px;
       height: 7px;
-
       border-radius: 50%;
-
       background: currentColor;
     }
 
@@ -271,7 +233,6 @@
       background: var(--section-bg);
 
       border: 1px solid var(--border);
-
       border-radius: var(--radius);
 
       overflow: hidden;
@@ -284,7 +245,6 @@
       flex: 1;
 
       min-height: 350px;
-
       max-height: 62vh;
 
       overflow-y: auto;
@@ -292,9 +252,7 @@
       padding: 16px;
 
       display: flex;
-
       flex-direction: column;
-
       gap: 12px;
     }
 
@@ -306,11 +264,9 @@
       border-radius: 15px;
 
       font-size: 15px;
-
       line-height: 1.5;
 
       white-space: pre-wrap;
-
       word-break: break-word;
     }
 
@@ -318,7 +274,6 @@
       align-self: flex-start;
 
       background: var(--secondary-bg);
-
       color: var(--text);
 
       border-bottom-left-radius: 5px;
@@ -328,7 +283,6 @@
       align-self: flex-end;
 
       background: var(--button);
-
       color: var(--button-text);
 
       border-bottom-right-radius: 5px;
@@ -338,25 +292,18 @@
       opacity: 0.7;
     }
 
-    /* ======================================================
-       WELCOME
-       ====================================================== */
-
     .welcome {
       margin: auto;
-
       max-width: 330px;
 
-      text-align: center;
-
-      color: var(--hint);
-
       padding: 25px 10px;
+
+      text-align: center;
+      color: var(--hint);
     }
 
     .welcome-icon {
       font-size: 42px;
-
       margin-bottom: 10px;
     }
 
@@ -364,7 +311,6 @@
       margin: 0 0 8px;
 
       color: var(--text);
-
       font-size: 20px;
     }
 
@@ -372,57 +318,47 @@
       margin: 0;
 
       font-size: 13px;
-
       line-height: 1.55;
     }
 
     /* ======================================================
-       INPUT AREA
+       INPUT
        ====================================================== */
 
     .input-area {
       padding: 12px;
 
       border-top: 1px solid var(--border);
-
       background: var(--section-bg);
     }
 
     .input-row {
       display: flex;
-
       align-items: flex-end;
-
-      gap: 8px;
+      gap: 7px;
     }
 
     #messageInput {
       flex: 1;
-
       min-width: 0;
 
       min-height: 48px;
-
       max-height: 150px;
 
       padding: 13px 14px;
 
       resize: none;
-
       overflow-y: auto;
 
       border: 1px solid var(--border);
-
       border-radius: 15px;
 
       outline: none;
 
       background: var(--secondary-bg);
-
       color: var(--text);
 
       font-size: 16px;
-
       line-height: 1.4;
     }
 
@@ -438,32 +374,55 @@
         rgba(36, 129, 204, 0.12);
     }
 
-    #sendButton {
-      width: 49px;
-      height: 49px;
+    .input-button {
+      width: 46px;
+      height: 48px;
 
-      flex: 0 0 49px;
+      flex: 0 0 46px;
 
       display: grid;
       place-items: center;
 
       border: none;
-
       border-radius: 14px;
 
-      background: var(--button);
+      background: var(--secondary-bg);
+      color: var(--text);
 
-      color: var(--button-text);
-
-      font-size: 21px;
+      font-size: 20px;
 
       cursor: pointer;
     }
 
-    #sendButton:disabled {
+    .input-button:disabled {
       opacity: 0.45;
-
       cursor: not-allowed;
+    }
+
+    #micButton.listening {
+      background: var(--red);
+      color: #ffffff;
+
+      animation: micPulse 1.3s infinite;
+    }
+
+    @keyframes micPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+      }
+    }
+
+    #sendButton {
+      background: var(--button);
+      color: var(--button-text);
     }
 
     .quick-actions {
@@ -488,11 +447,9 @@
       padding: 7px 10px;
 
       border: 1px solid var(--border);
-
       border-radius: 999px;
 
       background: var(--secondary-bg);
-
       color: var(--text);
 
       font-size: 12px;
@@ -506,9 +463,7 @@
 
     .message-actions {
       display: flex;
-
       gap: 7px;
-
       margin-top: 8px;
     }
 
@@ -516,15 +471,12 @@
       padding: 6px 9px;
 
       border: 1px solid var(--border);
-
       border-radius: 9px;
 
       background: var(--secondary-bg);
-
       color: var(--text);
 
       font-size: 11px;
-
       cursor: pointer;
     }
 
@@ -538,13 +490,7 @@
       left: 50%;
 
       bottom:
-        calc(
-          18px +
-          var(
-            --tg-content-safe-area-inset-bottom,
-            0px
-          )
-        );
+        calc(18px + var(--tg-content-safe-area-inset-bottom, 0px));
 
       z-index: 1000000;
 
@@ -555,19 +501,15 @@
       border-radius: 12px;
 
       background: #202124;
-
       color: #ffffff;
 
       font-size: 13px;
-
       text-align: center;
 
       opacity: 0;
-
       pointer-events: none;
 
-      transform:
-        translate(-50%, 20px);
+      transform: translate(-50%, 20px);
 
       transition:
         opacity 0.2s ease,
@@ -576,9 +518,7 @@
 
     #toast.show {
       opacity: 1;
-
-      transform:
-        translate(-50%, 0);
+      transform: translate(-50%, 0);
     }
 
     /* ======================================================
@@ -586,7 +526,6 @@
        ====================================================== */
 
     @media (max-width: 560px) {
-
       #app {
         padding-left: 10px;
         padding-right: 10px;
@@ -599,6 +538,11 @@
       .messages {
         max-height: 64vh;
       }
+
+      .input-button {
+        width: 44px;
+        flex-basis: 44px;
+      }
     }
   </style>
 </head>
@@ -606,7 +550,7 @@
 <body>
 
   <!-- ======================================================
-       BROWSER SCREEN
+       BROWSER ONLY
        ====================================================== -->
 
   <section id="browserGuard">
@@ -620,7 +564,7 @@
           aria-hidden="true"
         >
           <path
-            d="M21.6 3.2c.3-1.2-.2-1.7-1.4-1.3L2.6 8.6c-1.2.4-1.2 1-.2 1.3l4.5 1.4 1.7 5.3c.2.7.4.8.9.8.4 0 .6-.2.9-.5l2.2-2.1 4.5 3.3c.8.4 1.4.2 1.6-.7l3.1-14.2ZM8.6 11l9.9-6.2-8.1 7.2-.3 3.1-1.5 3.1-1.5-4.1Z"
+            d="M21.6 3.2c.3-1.2-.2-1.7-1.4-1.3L2.6 8.6c-1.2.4-1.2 1-.2 1.3l4.5 1.4 1.7 5.3c.2.7.4.8.9.8.4 0 .6-.2.9-.5l2.2-2.1 4.5 3.3c.8.4 1.4.2 1.6-.7l3.1-14.2ZM8.6 11l9.9-6.2-8.1 7.2-.3 3.1-1.5-4.1Z"
           />
         </svg>
 
@@ -641,7 +585,7 @@
 
 
   <!-- ======================================================
-       REAL TELEGRAM MINI APP
+       TELEGRAM APP
        ====================================================== -->
 
   <main id="app">
@@ -668,7 +612,11 @@
 
       </div>
 
-      <div class="status-pill">
+
+      <div
+        id="statusPill"
+        class="status-pill"
+      >
         <span class="status-dot"></span>
         Ready
       </div>
@@ -676,9 +624,7 @@
     </header>
 
 
-    <!-- ====================================================
-         CHAT CARD
-         ==================================================== -->
+    <!-- CHAT -->
 
     <section class="chat-card">
 
@@ -701,9 +647,9 @@
           </h2>
 
           <p>
-            Ask me a question, rewrite text,
-            summarize something, translate text,
-            or ask for ideas.
+            Type a message or tap 🎤 to speak.
+            I can answer questions, write,
+            summarize, translate and brainstorm.
           </p>
 
         </div>
@@ -727,9 +673,22 @@
 
 
           <button
-            id="sendButton"
+            id="micButton"
+            class="input-button"
             type="button"
-            aria-label="Send message"
+            aria-label="Voice input"
+            title="Voice input"
+          >
+            🎤
+          </button>
+
+
+          <button
+            id="sendButton"
+            class="input-button"
+            type="button"
+            aria-label="Send"
+            title="Send"
             disabled
           >
             ➤
@@ -748,6 +707,7 @@
             📝 Summarize
           </button>
 
+
           <button
             class="quick-chip"
             type="button"
@@ -756,6 +716,7 @@
             ✍️ Rewrite
           </button>
 
+
           <button
             class="quick-chip"
             type="button"
@@ -763,6 +724,7 @@
           >
             🌍 Translate
           </button>
+
 
           <button
             class="quick-chip"
@@ -786,21 +748,8 @@
 
   <script>
     /* ========================================================
-       CONFIGURATION
-       ========================================================
-
-       IMPORTANT:
-
-       Do NOT put an AI API key in this file.
-
-       The frontend will send the user's message to:
-
-          /.netlify/functions/chat
-
-       We will create that Netlify Function next.
-
-       The function will securely hold the AI API key.
-    */
+       CONFIG
+       ======================================================== */
 
     const AI_ENDPOINT =
       "/.netlify/functions/chat";
@@ -826,12 +775,6 @@
       );
 
 
-    /*
-      Require Telegram WebApp initialization data.
-
-      The actual AI app remains hidden in a normal browser.
-    */
-
     const initData =
       tg &&
       typeof tg.initData === "string"
@@ -848,11 +791,6 @@
 
     if (!isTelegramMiniApp) {
 
-      /*
-        Browser:
-        only show the block screen.
-      */
-
       browserGuard.style.display =
         "flex";
 
@@ -860,11 +798,6 @@
         "none";
 
     } else {
-
-      /*
-        Telegram:
-        reveal the AI application.
-      */
 
       browserGuard.style.display =
         "none";
@@ -887,10 +820,6 @@
       }
 
 
-      /*
-        Telegram Back button.
-      */
-
       try {
 
         tg.BackButton.show();
@@ -904,7 +833,7 @@
       } catch (error) {
 
         console.warn(
-          "Telegram Back button unavailable:",
+          "Back button unavailable:",
           error
         );
 
@@ -914,7 +843,7 @@
 
 
     /* ========================================================
-       TELEGRAM THEME
+       THEME
        ======================================================== */
 
     function applyTelegramTheme() {
@@ -1026,9 +955,21 @@
       );
 
 
+    const micButton =
+      document.getElementById(
+        "micButton"
+      );
+
+
     const sendButton =
       document.getElementById(
         "sendButton"
+      );
+
+
+    const statusPill =
+      document.getElementById(
+        "statusPill"
       );
 
 
@@ -1045,23 +986,18 @@
        TOAST
        ======================================================== */
 
-    function showToast(
-      text
-    ) {
+    function showToast(message) {
 
       toast.textContent =
-        text;
-
+        message;
 
       toast.classList.add(
         "show"
       );
 
-
       clearTimeout(
         showToast.timer
       );
-
 
       showToast.timer =
         setTimeout(
@@ -1072,14 +1008,14 @@
             );
 
           },
-          2600
+          2500
         );
 
     }
 
 
     /* ========================================================
-       INPUT RESIZE
+       TEXTAREA
        ======================================================== */
 
     function resizeInput() {
@@ -1113,17 +1049,10 @@
 
 
     /* ========================================================
-       ADD MESSAGE
+       ADD USER MESSAGE
        ======================================================== */
 
-    function addMessage(
-      text,
-      sender
-    ) {
-
-      /*
-        Hide welcome message after the first message.
-      */
+    function addUserMessage(text) {
 
       if (
         welcome &&
@@ -1134,6 +1063,37 @@
 
       }
 
+
+      const message =
+        document.createElement(
+          "div"
+        );
+
+
+      message.className =
+        "message user";
+
+
+      message.textContent =
+        text;
+
+
+      messages.appendChild(
+        message
+      );
+
+
+      messages.scrollTop =
+        messages.scrollHeight;
+
+    }
+
+
+    /* ========================================================
+       ADD AI MESSAGE
+       ======================================================== */
+
+    function addBotMessage(text) {
 
       const wrapper =
         document.createElement(
@@ -1141,57 +1101,11 @@
         );
 
 
-      wrapper.className =
-        "message " + sender;
-
-
-      wrapper.textContent =
-        text;
-
-
-      messages.appendChild(
-        wrapper
-      );
-
-
-      messages.scrollTop =
-        messages.scrollHeight;
-
-
-      return wrapper;
-
-    }
-
-
-    /* ========================================================
-       ADD BOT MESSAGE WITH COPY/SHARE
-       ======================================================== */
-
-    function addBotMessage(
-      text
-    ) {
-
-      if (
-        welcome &&
-        welcome.parentNode
-      ) {
-
-        welcome.remove();
-
-      }
-
-
-      const container =
-        document.createElement(
-          "div"
-        );
-
-
-      container.style.maxWidth =
+      wrapper.style.maxWidth =
         "88%";
 
 
-      container.style.alignSelf =
+      wrapper.style.alignSelf =
         "flex-start";
 
 
@@ -1219,25 +1133,25 @@
         "message-actions";
 
 
-      const copyButton =
+      const copy =
         document.createElement(
           "button"
         );
 
 
-      copyButton.className =
+      copy.className =
         "message-action";
 
 
-      copyButton.type =
+      copy.type =
         "button";
 
 
-      copyButton.textContent =
+      copy.textContent =
         "📋 Copy";
 
 
-      copyButton.addEventListener(
+      copy.addEventListener(
         "click",
         async () => {
 
@@ -1247,7 +1161,6 @@
               text
             );
 
-
             showToast(
               "Response copied."
             );
@@ -1255,7 +1168,7 @@
           } catch (error) {
 
             showToast(
-              "Could not copy the response."
+              "Could not copy."
             );
 
           }
@@ -1264,25 +1177,25 @@
       );
 
 
-      const shareButton =
+      const share =
         document.createElement(
           "button"
         );
 
 
-      shareButton.className =
+      share.className =
         "message-action";
 
 
-      shareButton.type =
+      share.type =
         "button";
 
 
-      shareButton.textContent =
+      share.textContent =
         "📤 Share";
 
 
-      shareButton.addEventListener(
+      share.addEventListener(
         "click",
         () => {
 
@@ -1317,57 +1230,23 @@
 
 
       actions.appendChild(
-        copyButton
+        copy
       );
 
 
       actions.appendChild(
-        shareButton
+        share
       );
 
 
-      container.appendChild(
+      wrapper.appendChild(
         message
       );
 
 
-      container.appendChild(
+      wrapper.appendChild(
         actions
       );
-
-
-      messages.appendChild(
-        container
-      );
-
-
-      messages.scrollTop =
-        messages.scrollHeight;
-
-
-      return container;
-
-    }
-
-
-    /* ========================================================
-       LOADING MESSAGE
-       ======================================================== */
-
-    function addLoadingMessage() {
-
-      const wrapper =
-        document.createElement(
-          "div"
-        );
-
-
-      wrapper.className =
-        "message bot loading";
-
-
-      wrapper.textContent =
-        "🤔 Thinking…";
 
 
       messages.appendChild(
@@ -1378,14 +1257,45 @@
       messages.scrollTop =
         messages.scrollHeight;
 
+    }
 
-      return wrapper;
+
+    /* ========================================================
+       LOADING
+       ======================================================== */
+
+    function addLoading() {
+
+      const loading =
+        document.createElement(
+          "div"
+        );
+
+
+      loading.className =
+        "message bot loading";
+
+
+      loading.textContent =
+        "🤔 Thinking…";
+
+
+      messages.appendChild(
+        loading
+      );
+
+
+      messages.scrollTop =
+        messages.scrollHeight;
+
+
+      return loading;
 
     }
 
 
     /* ========================================================
-       SEND MESSAGE
+       SEND TO GEMINI
        ======================================================== */
 
     async function sendMessage() {
@@ -1399,11 +1309,11 @@
       }
 
 
-      /*
-        Prevent duplicate requests.
-      */
-
       sendButton.disabled =
+        true;
+
+
+      micButton.disabled =
         true;
 
 
@@ -1411,9 +1321,8 @@
         true;
 
 
-      addMessage(
-        text,
-        "user"
+      addUserMessage(
+        text
       );
 
 
@@ -1425,13 +1334,8 @@
 
 
       const loading =
-        addLoadingMessage();
+        addLoading();
 
-
-      /*
-        Keep a lightweight conversation history
-        for the backend.
-      */
 
       conversation.push({
         role: "user",
@@ -1456,7 +1360,8 @@
 
               body: JSON.stringify({
 
-                message: text,
+                message:
+                  text,
 
                 conversation:
                   conversation.slice(
@@ -1472,49 +1377,37 @@
           );
 
 
+        let data = {};
+
+
+        try {
+
+          data =
+            await response.json();
+
+        } catch (error) {
+          /* Ignore invalid JSON. */
+        }
+
+
         if (!response.ok) {
 
-          let errorMessage =
-            "AI service error.";
-
-          try {
-
-            const errorData =
-              await response.json();
-
-            if (
-              errorData.error
-            ) {
-
-              errorMessage =
-                errorData.error;
-
-            }
-
-          } catch (error) {
-            /* Ignore JSON error parsing. */
-          }
-
-
           throw new Error(
-            errorMessage
+            data.error ||
+            "AI service error."
           );
 
         }
 
 
-        const data =
-          await response.json();
-
-
         if (
-          !data.reply ||
           typeof data.reply !==
-            "string"
+          "string" ||
+          !data.reply.trim()
         ) {
 
           throw new Error(
-            "The AI returned an invalid response."
+            "The AI returned an empty response."
           );
 
         }
@@ -1537,7 +1430,7 @@
       } catch (error) {
 
         console.error(
-          "AI request error:",
+          "AI error:",
           error
         );
 
@@ -1556,6 +1449,10 @@
       } finally {
 
         messageInput.disabled =
+          false;
+
+
+        micButton.disabled =
           false;
 
 
@@ -1589,12 +1486,6 @@
       "keydown",
       (event) => {
 
-        /*
-          Enter sends.
-
-          Shift + Enter creates a new line.
-        */
-
         if (
           event.key === "Enter" &&
           !event.shiftKey
@@ -1611,7 +1502,7 @@
 
 
     /* ========================================================
-       QUICK ACTIONS
+       QUICK PROMPTS
        ======================================================== */
 
     document
@@ -1625,13 +1516,11 @@
             "click",
             () => {
 
-              const prompt =
-                button.dataset.prompt ||
-                "";
-
-
               messageInput.value =
-                prompt + " ";
+                (
+                  button.dataset.prompt ||
+                  ""
+                ) + " ";
 
 
               resizeInput();
@@ -1651,7 +1540,309 @@
 
 
     /* ========================================================
-       STARTUP
+       VOICE RECOGNITION
+       ======================================================== */
+
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+
+    let recognition = null;
+
+    let isListening = false;
+
+    let voiceBaseText = "";
+
+
+    if (SpeechRecognition) {
+
+      recognition =
+        new SpeechRecognition();
+
+
+      recognition.continuous =
+        false;
+
+
+      recognition.interimResults =
+        true;
+
+
+      recognition.maxAlternatives =
+        1;
+
+
+      recognition.lang =
+        "en-US";
+
+
+      recognition.onstart =
+        () => {
+
+          isListening =
+            true;
+
+
+          voiceBaseText =
+            messageInput.value.trim();
+
+
+          micButton.classList.add(
+            "listening"
+          );
+
+
+          micButton.textContent =
+            "⏹";
+
+
+          statusPill.classList.add(
+            "listening"
+          );
+
+
+          statusPill.innerHTML =
+            '<span class="status-dot"></span> Listening';
+
+
+          messageInput.placeholder =
+            "Speak now...";
+
+        };
+
+
+      recognition.onresult =
+        (event) => {
+
+          let interim =
+            "";
+
+
+          let finalText =
+            "";
+
+
+          for (
+            let i = event.resultIndex;
+            i < event.results.length;
+            i++
+          ) {
+
+            const result =
+              event.results[i];
+
+
+            const text =
+              result[0].transcript;
+
+
+            if (result.isFinal) {
+
+              finalText +=
+                text;
+
+            } else {
+
+              interim +=
+                text;
+
+            }
+
+          }
+
+
+          const prefix =
+            voiceBaseText
+              ? voiceBaseText +
+                " "
+              : "";
+
+
+          messageInput.value =
+            prefix +
+            finalText +
+            interim;
+
+
+          resizeInput();
+
+
+          sendButton.disabled =
+            messageInput.value.trim()
+              .length === 0;
+
+        };
+
+
+      recognition.onerror =
+        (event) => {
+
+          console.error(
+            "Speech recognition error:",
+            event.error
+          );
+
+
+          stopVoiceUI();
+
+
+          if (
+            event.error ===
+            "not-allowed"
+          ) {
+
+            showToast(
+              "Microphone permission was denied."
+            );
+
+          } else if (
+            event.error ===
+            "no-speech"
+          ) {
+
+            showToast(
+              "No speech was detected."
+            );
+
+          } else if (
+            event.error ===
+            "network"
+          ) {
+
+            showToast(
+              "Speech recognition needs a network connection."
+            );
+
+          } else {
+
+            showToast(
+              "Voice input could not start."
+            );
+
+          }
+
+        };
+
+
+      recognition.onend =
+        () => {
+
+          stopVoiceUI();
+
+        };
+
+    } else {
+
+      /*
+        Some Telegram devices/webviews do not expose
+        SpeechRecognition.
+      */
+
+      micButton.disabled =
+        true;
+
+
+      micButton.title =
+        "Voice input is not supported on this device";
+
+    }
+
+
+    /* ========================================================
+       START / STOP VOICE
+       ======================================================== */
+
+    micButton.addEventListener(
+      "click",
+      () => {
+
+        if (!recognition) {
+
+          showToast(
+            "Voice input is not supported on this device."
+          );
+
+          return;
+
+        }
+
+
+        if (isListening) {
+
+          try {
+
+            recognition.stop();
+
+          } catch (error) {
+
+            console.warn(error);
+
+          }
+
+
+          return;
+
+        }
+
+
+        try {
+
+          recognition.lang =
+            "en-US";
+
+
+          recognition.start();
+
+        } catch (error) {
+
+          console.error(
+            error
+          );
+
+
+          showToast(
+            "Could not start voice input."
+          );
+
+        }
+
+      }
+    );
+
+
+    function stopVoiceUI() {
+
+      isListening =
+        false;
+
+
+      micButton.classList.remove(
+        "listening"
+      );
+
+
+      micButton.textContent =
+        "🎤";
+
+
+      statusPill.classList.remove(
+        "listening"
+      );
+
+
+      statusPill.innerHTML =
+        '<span class="status-dot"></span> Ready';
+
+
+      messageInput.placeholder =
+        "Ask anything...";
+
+    }
+
+
+    /* ========================================================
+       START
        ======================================================== */
 
     if (isTelegramMiniApp) {
