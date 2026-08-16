@@ -1,21 +1,14 @@
 export default async (req) => {
-  // Only allow POST requests.
   if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({
-        error: "Method not allowed."
-      }),
+    return json(
       {
-        status: 405,
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
+        error: "Method not allowed."
+      },
+      405
     );
   }
 
   try {
-    // Read the request body.
     const body = await req.json();
 
     const message =
@@ -29,46 +22,31 @@ export default async (req) => {
         : [];
 
     if (!message) {
-      return new Response(
-        JSON.stringify({
-          error: "Please enter a message."
-        }),
+      return json(
         {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
+          error: "Please enter a message."
+        },
+        400
       );
     }
 
-    // Get the API key from Netlify Environment Variables.
     const apiKey =
       process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
       console.error(
-        "OPENAI_API_KEY is not configured."
+        "OPENAI_API_KEY is missing."
       );
 
-      return new Response(
-        JSON.stringify({
-          error:
-            "AI service is not configured yet."
-        }),
+      return json(
         {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
+          error:
+            "OPENAI_API_KEY is not configured in Netlify."
+        },
+        500
       );
     }
 
-    /*
-     * Keep the conversation small so requests don't
-     * grow indefinitely.
-     */
     const recentConversation =
       conversation
         .filter(
@@ -82,13 +60,17 @@ export default async (req) => {
         )
         .slice(-12);
 
-    /*
-     * Ask OpenAI's Responses API.
-     *
-     * The model can be changed later without touching
-     * the frontend.
-     */
-    const openaiResponse =
+    const input =
+      recentConversation.length > 0
+        ? recentConversation
+        : [
+            {
+              role: "user",
+              content: message
+            }
+          ];
+
+    const response =
       await fetch(
         "https://api.openai.com/v1/responses",
         {
@@ -107,60 +89,113 @@ export default async (req) => {
               "You are a helpful AI assistant inside a Telegram Mini App. " +
               "Answer clearly and naturally. " +
               "Help with questions, writing, rewriting, summarizing, translation, " +
-              "brainstorming, explanations, and everyday tasks. " +
-              "Be concise by default, but provide detail when useful. " +
-              "Do not claim to have real-time information unless you actually have access to it.",
+              "brainstorming and explanations. " +
+              "Be concise by default.",
 
-            input: recentConversation.length
-              ? recentConversation
-              : [
-                  {
-                    role: "user",
-                    content: message
-                  }
-                ],
+            input,
 
             store: false
           })
         }
       );
 
+    const rawBody =
+      await response.text();
 
     /*
-     * Handle OpenAI errors.
+     * OpenAI rejected the request.
      */
-    if (!openaiResponse.ok) {
-      const errorText =
-        await openaiResponse.text();
-
+    if (!response.ok) {
       console.error(
-        "OpenAI API error:",
-        errorText
+        "OpenAI status:",
+        response.status
       );
 
-      return new Response(
-        JSON.stringify({
-          error:
-            "The AI service could not process your request."
-        }),
+      console.error(
+        "OpenAI response:",
+        rawBody
+      );
+
+      let apiError = null;
+
+      try {
+        apiError =
+          JSON.parse(rawBody);
+      } catch {
+        // Response wasn't JSON.
+      }
+
+      const messageFromAPI =
+        apiError?.error?.message ||
+        apiError?.error?.code ||
+        "";
+
+      /*
+       * Give the frontend a useful but safe message.
+       */
+      if (
+        response.status === 401
+      ) {
+        return json(
+          {
+            error:
+              "OpenAI API key is invalid or not authorized."
+          },
+          401
+        );
+      }
+
+      if (
+        response.status === 403
+      ) {
+        return json(
+          {
+            error:
+              "OpenAI API access was denied. Check your project permissions and API key."
+          },
+          403
+        );
+      }
+
+      if (
+        response.status === 429
+      ) {
+        return json(
+          {
+            error:
+              "OpenAI rejected the request because of rate limits or insufficient API billing/credits."
+          },
+          429
+        );
+      }
+
+      return json(
         {
-          status: 502,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
+          error:
+            messageFromAPI ||
+            `OpenAI returned HTTP ${response.status}.`
+        },
+        502
       );
     }
 
+    let data;
 
-    const data =
-      await openaiResponse.json();
-
+    try {
+      data =
+        JSON.parse(rawBody);
+    } catch {
+      return json(
+        {
+          error:
+            "OpenAI returned an invalid response."
+        },
+        502
+      );
+    }
 
     /*
-     * Responses API exposes convenient output_text
-     * in the SDK; with raw HTTP we extract text from
-     * the output message content.
+     * Extract text from Responses API.
      */
     let reply = "";
 
@@ -172,97 +207,90 @@ export default async (req) => {
         data.output_text.trim();
     }
 
-
-    if (!reply && Array.isArray(data.output)) {
-
+    if (
+      !reply &&
+      Array.isArray(data.output)
+    ) {
       for (
         const item of data.output
       ) {
-
         if (
-          item &&
-          item.type === "message" &&
+          item?.type === "message" &&
           Array.isArray(item.content)
         ) {
-
           for (
             const content of item.content
           ) {
-
             if (
-              content &&
-              content.type === "output_text" &&
-              typeof content.text === "string"
+              content?.type ===
+                "output_text" &&
+              typeof content.text ===
+                "string"
             ) {
-
               reply +=
                 content.text;
             }
-
           }
-
         }
-
       }
 
       reply =
         reply.trim();
     }
 
-
     if (!reply) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "The AI returned an empty response."
-        }),
+      return json(
         {
-          status: 502,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
+          error:
+            "OpenAI returned an empty response."
+        },
+        502
       );
     }
 
-
-    /*
-     * Return the answer to the Mini App.
-     */
-    return new Response(
-      JSON.stringify({
-        reply
-      }),
+    return json(
       {
-        status: 200,
-
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store"
-        }
-      }
+        reply
+      },
+      200
     );
 
   } catch (error) {
-
     console.error(
-      "Function error:",
+      "Netlify function error:",
       error
     );
 
-    return new Response(
-      JSON.stringify({
-        error:
-          "Something went wrong. Please try again."
-      }),
+    return json(
       {
-        status: 500,
-
-        headers: {
-          "Content-Type":
-            "application/json"
-        }
-      }
+        error:
+          "The Netlify AI function failed. Check the function logs."
+      },
+      500
     );
   }
 };
+
+
+/*
+ * Small JSON response helper.
+ */
+function json(
+  data,
+  status
+) {
+  return new Response(
+    JSON.stringify(data),
+    {
+      status,
+
+      headers: {
+        "Content-Type":
+          "application/json",
+
+        "Cache-Control":
+          "no-store"
+      }
+    }
+  );
+}
