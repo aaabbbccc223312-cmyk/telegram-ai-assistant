@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0e1720"
+  >
+
+  <title>AI Assistant</title>
+
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --secondary-bg: #f1f1f1;
+      --section-bg: #ffffff;
+      --text: #111111;
+      --hint: #8e8e93;
+      --link: #2481cc;
+      --button: #2481cc;
+      --button-text: #ffffff;
+      --border: rgba(127, 127, 127, 0.18);
+
+      --green: #16a34a;
+      --red: #dc2626;
+
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+
+      width: 100%;
+      min-height: 100%;
+
+      background: var(--bg);
+      color: var(--text);
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    /* ======================================================
+       BROWSER BLOCK SCREEN
+       ====================================================== */
+
+    #browserGuard {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background: #0e1720;
+    }
+
+    .guard-card {
+      width: min(370px, calc(100% - 40px));
+
+      padding: 30px 24px;
+
+      text-align: center;
+
+      background: #1c2a35;
+
+      border-radius: 24px;
+
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .telegram-logo {
+      width: 80px;
+      height: 80px;
+
+      margin: 0 auto 20px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 50%;
+
+      background: #229ed9;
+    }
+
+    .telegram-logo svg {
+      width: 46px;
+      height: 46px;
+      fill: #ffffff;
+    }
+
+    .guard-title {
+      margin: 0 0 12px;
+
+      color: #ffffff;
+
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .guard-text {
+      margin: 0 auto;
+
+      max-width: 310px;
+
+      color: #d7e0e7;
+
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    /* ======================================================
+       REAL TELEGRAM APP
+       ====================================================== */
+
+    #app {
+      display: none;
+
+      width: 100%;
+      max-width: 760px;
+
+      margin: 0 auto;
+
+      padding:
+        calc(
+          14px +
+          var(
+            --tg-content-safe-area-inset-top,
+            0px
+          )
+        )
+        14px
+        calc(
+          24px +
+          var(
+            --tg-content-safe-area-inset-bottom,
+            0px
+          )
+        );
+    }
+
+    /* ======================================================
+       HEADER
+       ====================================================== */
+
+    .header {
+      display: flex;
+
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: flex;
+
+      align-items: center;
+
+      gap: 11px;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 14px;
+
+      background:
+        rgba(36, 129, 204, 0.12);
+
+      font-size: 23px;
+    }
+
+    .brand-title {
+      margin: 0;
+
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .brand-subtitle {
+      margin: 3px 0 0;
+
+      color: var(--hint);
+
+      font-size: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      padding: 7px 10px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(22, 163, 74, 0.1);
+
+      color: var(--green);
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+
+      border-radius: 50%;
+
+      background: currentColor;
+    }
+
+    /* ======================================================
+       CHAT
+       ====================================================== */
+
+    .chat-card {
+      min-height: 55vh;
+
+      background: var(--section-bg);
+
+      border: 1px solid var(--border);
+
+      border-radius: var(--radius);
+
+      overflow: hidden;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages {
+      flex: 1;
+
+      min-height: 350px;
+
+      max-height: 62vh;
+
+      overflow-y: auto;
+
+      padding: 16px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 88%;
+
+      padding: 11px 13px;
+
+      border-radius: 15px;
+
+      font-size: 15px;
+
+      line-height: 1.5;
+
+      white-space: pre-wrap;
+
+      word-break: break-word;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+
+      background: var(--secondary-bg);
+
+      color: var(--text);
+
+      border-bottom-left-radius: 5px;
+    }
+
+    .message.user {
+      align-self: flex-end;
+
+      background: var(--button);
+
+      color: var(--button-text);
+
+      border-bottom-right-radius: 5px;
+    }
+
+    .message.loading {
+      opacity: 0.7;
+    }
+
+    /* ======================================================
+       WELCOME
+       ====================================================== */
+
+    .welcome {
+      margin: auto;
+
+      max-width: 330px;
+
+      text-align: center;
+
+      color: var(--hint);
+
+      padding: 25px 10px;
+    }
+
+    .welcome-icon {
+      font-size: 42px;
+
+      margin-bottom: 10px;
+    }
+
+    .welcome h2 {
+      margin: 0 0 8px;
+
+      color: var(--text);
+
+      font-size: 20px;
+    }
+
+    .welcome p {
+      margin: 0;
+
+      font-size: 13px;
+
+      line-height: 1.55;
+    }
+
+    /* ======================================================
+       INPUT AREA
+       ====================================================== */
+
+    .input-area {
+      padding: 12px;
+
+      border-top: 1px solid var(--border);
+
+      background: var(--section-bg);
+    }
+
+    .input-row {
+      display: flex;
+
+      align-items: flex-end;
+
+      gap: 8px;
+    }
+
+    #messageInput {
+      flex: 1;
+
+      min-width: 0;
+
+      min-height: 48px;
+
+      max-height: 150px;
+
+      padding: 13px 14px;
+
+      resize: none;
+
+      overflow-y: auto;
+
+      border: 1px solid var(--border);
+
+      border-radius: 15px;
+
+      outline: none;
+
+      background: var(--secondary-bg);
+
+      color: var(--text);
+
+      font-size: 16px;
+
+      line-height: 1.4;
+    }
+
+    #messageInput::placeholder {
+      color: var(--hint);
+    }
+
+    #messageInput:focus {
+      border-color: var(--link);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(36, 129, 204, 0.12);
+    }
+
+    #sendButton {
+      width: 49px;
+      height: 49px;
+
+      flex: 0 0 49px;
+
+      display: grid;
+      place-items: center;
+
+      border: none;
+
+      border-radius: 14px;
+
+      background: var(--button);
+
+      color: var(--button-text);
+
+      font-size: 21px;
+
+      cursor: pointer;
+    }
+
+    #sendButton:disabled {
+      opacity: 0.45;
+
+      cursor: not-allowed;
+    }
+
+    .quick-actions {
+      display: flex;
+
+      gap: 7px;
+
+      overflow-x: auto;
+
+      padding-top: 9px;
+
+      scrollbar-width: none;
+    }
+
+    .quick-actions::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-chip {
+      flex: 0 0 auto;
+
+      padding: 7px 10px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 999px;
+
+      background: var(--secondary-bg);
+
+      color: var(--text);
+
+      font-size: 12px;
+
+      cursor: pointer;
+    }
+
+    /* ======================================================
+       MESSAGE ACTIONS
+       ====================================================== */
+
+    .message-actions {
+      display: flex;
+
+      gap: 7px;
+
+      margin-top: 8px;
+    }
+
+    .message-action {
+      padding: 6px 9px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 9px;
+
+      background: var(--secondary-bg);
+
+      color: var(--text);
+
+      font-size: 11px;
+
+      cursor: pointer;
+    }
+
+    /* ======================================================
+       TOAST
+       ====================================================== */
+
+    #toast {
+      position: fixed;
+
+      left: 50%;
+
+      bottom:
+        calc(
+          18px +
+          var(
+            --tg-content-safe-area-inset-bottom,
+            0px
+          )
+        );
+
+      z-index: 1000000;
+
+      max-width: calc(100% - 28px);
+
+      padding: 11px 14px;
+
+      border-radius: 12px;
+
+      background: #202124;
+
+      color: #ffffff;
+
+      font-size: 13px;
+
+      text-align: center;
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transform:
+        translate(-50%, 20px);
+
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    #toast.show {
+      opacity: 1;
+
+      transform:
+        translate(-50%, 0);
+    }
+
+    /* ======================================================
+       MOBILE
+       ====================================================== */
+
+    @media (max-width: 560px) {
+
+      #app {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .status-pill {
+        display: none;
+      }
+
+      .messages {
+        max-height: 64vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ======================================================
+       BROWSER SCREEN
+       ====================================================== -->
+
+  <section id="browserGuard">
+
+    <div class="guard-card">
+
+      <div class="telegram-logo">
+
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            d="M21.6 3.2c.3-1.2-.2-1.7-1.4-1.3L2.6 8.6c-1.2.4-1.2 1-.2 1.3l4.5 1.4 1.7 5.3c.2.7.4.8.9.8.4 0 .6-.2.9-.5l2.2-2.1 4.5 3.3c.8.4 1.4.2 1.6-.7l3.1-14.2ZM8.6 11l9.9-6.2-8.1 7.2-.3 3.1-1.5 3.1-1.5-4.1Z"
+          />
+        </svg>
+
+      </div>
+
+      <h1 class="guard-title">
+        Open in Telegram
+      </h1>
+
+      <p class="guard-text">
+        🤖 AI Assistant is a Telegram Mini App.
+        Please open it from Telegram to use it.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       REAL TELEGRAM MINI APP
+       ====================================================== -->
+
+  <main id="app">
+
+    <header class="header">
+
+      <div class="brand">
+
+        <div class="brand-icon">
+          🤖
+        </div>
+
+        <div>
+
+          <h1 class="brand-title">
+            AI Assistant
+          </h1>
+
+          <p class="brand-subtitle">
+            Ask, write, summarize and translate
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        Ready
+      </div>
+
+    </header>
+
+
+    <!-- ====================================================
+         CHAT CARD
+         ==================================================== -->
+
+    <section class="chat-card">
+
+      <div
+        id="messages"
+        class="messages"
+      >
+
+        <div
+          id="welcome"
+          class="welcome"
+        >
+
+          <div class="welcome-icon">
+            🤖
+          </div>
+
+          <h2>
+            How can I help?
+          </h2>
+
+          <p>
+            Ask me a question, rewrite text,
+            summarize something, translate text,
+            or ask for ideas.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- INPUT -->
+
+      <div class="input-area">
+
+        <div class="input-row">
+
+          <textarea
+            id="messageInput"
+            rows="1"
+            placeholder="Ask anything..."
+            autocomplete="off"
+            spellcheck="true"
+          ></textarea>
+
+
+          <button
+            id="sendButton"
+            type="button"
+            aria-label="Send message"
+            disabled
+          >
+            ➤
+          </button>
+
+        </div>
+
+
+        <div class="quick-actions">
+
+          <button
+            class="quick-chip"
+            type="button"
+            data-prompt="Summarize this text in simple language:"
+          >
+            📝 Summarize
+          </button>
+
+          <button
+            class="quick-chip"
+            type="button"
+            data-prompt="Rewrite this professionally:"
+          >
+            ✍️ Rewrite
+          </button>
+
+          <button
+            class="quick-chip"
+            type="button"
+            data-prompt="Translate this to French:"
+          >
+            🌍 Translate
+          </button>
+
+          <button
+            class="quick-chip"
+            type="button"
+            data-prompt="Give me 5 useful ideas for:"
+          >
+            💡 Ideas
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <div id="toast"></div>
+
+
+  <script>
+    /* ========================================================
+       CONFIGURATION
+       ========================================================
+
+       IMPORTANT:
+
+       Do NOT put an AI API key in this file.
+
+       The frontend will send the user's message to:
+
+          /.netlify/functions/chat
+
+       We will create that Netlify Function next.
+
+       The function will securely hold the AI API key.
+    */
+
+    const AI_ENDPOINT =
+      "/.netlify/functions/chat";
+
+
+    /* ========================================================
+       TELEGRAM
+       ======================================================== */
+
+    const tg =
+      window.Telegram?.WebApp || null;
+
+
+    const browserGuard =
+      document.getElementById(
+        "browserGuard"
+      );
+
+
+    const app =
+      document.getElementById(
+        "app"
+      );
+
+
+    /*
+      Require Telegram WebApp initialization data.
+
+      The actual AI app remains hidden in a normal browser.
+    */
+
+    const initData =
+      tg &&
+      typeof tg.initData === "string"
+        ? tg.initData.trim()
+        : "";
+
+
+    const isTelegramMiniApp =
+      !!tg &&
+      typeof tg.ready === "function" &&
+      typeof tg.close === "function" &&
+      initData.length > 0;
+
+
+    if (!isTelegramMiniApp) {
+
+      /*
+        Browser:
+        only show the block screen.
+      */
+
+      browserGuard.style.display =
+        "flex";
+
+      app.style.display =
+        "none";
+
+    } else {
+
+      /*
+        Telegram:
+        reveal the AI application.
+      */
+
+      browserGuard.style.display =
+        "none";
+
+      app.style.display =
+        "block";
+
+
+      try {
+        tg.ready();
+      } catch (error) {
+        console.warn(error);
+      }
+
+
+      try {
+        tg.expand();
+      } catch (error) {
+        console.warn(error);
+      }
+
+
+      /*
+        Telegram Back button.
+      */
+
+      try {
+
+        tg.BackButton.show();
+
+        tg.BackButton.onClick(
+          () => {
+            tg.close();
+          }
+        );
+
+      } catch (error) {
+
+        console.warn(
+          "Telegram Back button unavailable:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /* ========================================================
+       TELEGRAM THEME
+       ======================================================== */
+
+    function applyTelegramTheme() {
+
+      if (!tg) {
+        return;
+      }
+
+
+      const theme =
+        tg.themeParams || {};
+
+
+      const root =
+        document.documentElement;
+
+
+      const themeMap = {
+
+        bg_color:
+          "--bg",
+
+        secondary_bg_color:
+          "--secondary-bg",
+
+        section_bg_color:
+          "--section-bg",
+
+        text_color:
+          "--text",
+
+        hint_color:
+          "--hint",
+
+        link_color:
+          "--link",
+
+        button_color:
+          "--button",
+
+        button_text_color:
+          "--button-text"
+
+      };
+
+
+      Object.entries(
+        themeMap
+      ).forEach(
+        ([telegramKey, cssKey]) => {
+
+          if (
+            theme[telegramKey]
+          ) {
+
+            root.style.setProperty(
+              cssKey,
+              theme[telegramKey]
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    if (isTelegramMiniApp) {
+
+      applyTelegramTheme();
+
+
+      try {
+
+        tg.onEvent(
+          "themeChanged",
+          applyTelegramTheme
+        );
+
+      } catch (error) {
+
+        console.warn(error);
+
+      }
+
+    }
+
+
+    /* ========================================================
+       ELEMENTS
+       ======================================================== */
+
+    const messages =
+      document.getElementById(
+        "messages"
+      );
+
+
+    const welcome =
+      document.getElementById(
+        "welcome"
+      );
+
+
+    const messageInput =
+      document.getElementById(
+        "messageInput"
+      );
+
+
+    const sendButton =
+      document.getElementById(
+        "sendButton"
+      );
+
+
+    const toast =
+      document.getElementById(
+        "toast"
+      );
+
+
+    let conversation = [];
+
+
+    /* ========================================================
+       TOAST
+       ======================================================== */
+
+    function showToast(
+      text
+    ) {
+
+      toast.textContent =
+        text;
+
+
+      toast.classList.add(
+        "show"
+      );
+
+
+      clearTimeout(
+        showToast.timer
+      );
+
+
+      showToast.timer =
+        setTimeout(
+          () => {
+
+            toast.classList.remove(
+              "show"
+            );
+
+          },
+          2600
+        );
+
+    }
+
+
+    /* ========================================================
+       INPUT RESIZE
+       ======================================================== */
+
+    function resizeInput() {
+
+      messageInput.style.height =
+        "auto";
+
+
+      messageInput.style.height =
+        Math.min(
+          messageInput.scrollHeight,
+          150
+        ) + "px";
+
+    }
+
+
+    messageInput.addEventListener(
+      "input",
+      () => {
+
+        resizeInput();
+
+
+        sendButton.disabled =
+          messageInput.value.trim()
+            .length === 0;
+
+      }
+    );
+
+
+    /* ========================================================
+       ADD MESSAGE
+       ======================================================== */
+
+    function addMessage(
+      text,
+      sender
+    ) {
+
+      /*
+        Hide welcome message after the first message.
+      */
+
+      if (
+        welcome &&
+        welcome.parentNode
+      ) {
+
+        welcome.remove();
+
+      }
+
+
+      const wrapper =
+        document.createElement(
+          "div"
+        );
+
+
+      wrapper.className =
+        "message " + sender;
+
+
+      wrapper.textContent =
+        text;
+
+
+      messages.appendChild(
+        wrapper
+      );
+
+
+      messages.scrollTop =
+        messages.scrollHeight;
+
+
+      return wrapper;
+
+    }
+
+
+    /* ========================================================
+       ADD BOT MESSAGE WITH COPY/SHARE
+       ======================================================== */
+
+    function addBotMessage(
+      text
+    ) {
+
+      if (
+        welcome &&
+        welcome.parentNode
+      ) {
+
+        welcome.remove();
+
+      }
+
+
+      const container =
+        document.createElement(
+          "div"
+        );
+
+
+      container.style.maxWidth =
+        "88%";
+
+
+      container.style.alignSelf =
+        "flex-start";
+
+
+      const message =
+        document.createElement(
+          "div"
+        );
+
+
+      message.className =
+        "message bot";
+
+
+      message.textContent =
+        text;
+
+
+      const actions =
+        document.createElement(
+          "div"
+        );
+
+
+      actions.className =
+        "message-actions";
+
+
+      const copyButton =
+        document.createElement(
+          "button"
+        );
+
+
+      copyButton.className =
+        "message-action";
+
+
+      copyButton.type =
+        "button";
+
+
+      copyButton.textContent =
+        "📋 Copy";
+
+
+      copyButton.addEventListener(
+        "click",
+        async () => {
+
+          try {
+
+            await navigator.clipboard.writeText(
+              text
+            );
+
+
+            showToast(
+              "Response copied."
+            );
+
+          } catch (error) {
+
+            showToast(
+              "Could not copy the response."
+            );
+
+          }
+
+        }
+      );
+
+
+      const shareButton =
+        document.createElement(
+          "button"
+        );
+
+
+      shareButton.className =
+        "message-action";
+
+
+      shareButton.type =
+        "button";
+
+
+      shareButton.textContent =
+        "📤 Share";
+
+
+      shareButton.addEventListener(
+        "click",
+        () => {
+
+          const url =
+            "https://t.me/share/url" +
+            "?url=" +
+            encodeURIComponent(
+              window.location.href
+            ) +
+            "&text=" +
+            encodeURIComponent(
+              "🤖 AI Assistant\n\n" +
+              text
+            );
+
+
+          try {
+
+            tg.openTelegramLink(
+              url
+            );
+
+          } catch (error) {
+
+            window.location.href =
+              url;
+
+          }
+
+        }
+      );
+
+
+      actions.appendChild(
+        copyButton
+      );
+
+
+      actions.appendChild(
+        shareButton
+      );
+
+
+      container.appendChild(
+        message
+      );
+
+
+      container.appendChild(
+        actions
+      );
+
+
+      messages.appendChild(
+        container
+      );
+
+
+      messages.scrollTop =
+        messages.scrollHeight;
+
+
+      return container;
+
+    }
+
+
+    /* ========================================================
+       LOADING MESSAGE
+       ======================================================== */
+
+    function addLoadingMessage() {
+
+      const wrapper =
+        document.createElement(
+          "div"
+        );
+
+
+      wrapper.className =
+        "message bot loading";
+
+
+      wrapper.textContent =
+        "🤔 Thinking…";
+
+
+      messages.appendChild(
+        wrapper
+      );
+
+
+      messages.scrollTop =
+        messages.scrollHeight;
+
+
+      return wrapper;
+
+    }
+
+
+    /* ========================================================
+       SEND MESSAGE
+       ======================================================== */
+
+    async function sendMessage() {
+
+      const text =
+        messageInput.value.trim();
+
+
+      if (!text) {
+        return;
+      }
+
+
+      /*
+        Prevent duplicate requests.
+      */
+
+      sendButton.disabled =
+        true;
+
+
+      messageInput.disabled =
+        true;
+
+
+      addMessage(
+        text,
+        "user"
+      );
+
+
+      messageInput.value =
+        "";
+
+
+      resizeInput();
+
+
+      const loading =
+        addLoadingMessage();
+
+
+      /*
+        Keep a lightweight conversation history
+        for the backend.
+      */
+
+      conversation.push({
+        role: "user",
+        content: text
+      });
+
+
+      try {
+
+        const response =
+          await fetch(
+            AI_ENDPOINT,
+            {
+
+              method:
+                "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+
+                message: text,
+
+                conversation:
+                  conversation.slice(
+                    -12
+                  ),
+
+                initData:
+                  initData
+
+              })
+
+            }
+          );
+
+
+        if (!response.ok) {
+
+          let errorMessage =
+            "AI service error.";
+
+          try {
+
+            const errorData =
+              await response.json();
+
+            if (
+              errorData.error
+            ) {
+
+              errorMessage =
+                errorData.error;
+
+            }
+
+          } catch (error) {
+            /* Ignore JSON error parsing. */
+          }
+
+
+          throw new Error(
+            errorMessage
+          );
+
+        }
+
+
+        const data =
+          await response.json();
+
+
+        if (
+          !data.reply ||
+          typeof data.reply !==
+            "string"
+        ) {
+
+          throw new Error(
+            "The AI returned an invalid response."
+          );
+
+        }
+
+
+        loading.remove();
+
+
+        addBotMessage(
+          data.reply
+        );
+
+
+        conversation.push({
+          role: "assistant",
+          content: data.reply
+        });
+
+
+      } catch (error) {
+
+        console.error(
+          "AI request error:",
+          error
+        );
+
+
+        loading.remove();
+
+
+        addBotMessage(
+          "⚠️ " +
+          (
+            error.message ||
+            "I couldn't process that request."
+          )
+        );
+
+      } finally {
+
+        messageInput.disabled =
+          false;
+
+
+        sendButton.disabled =
+          messageInput.value.trim()
+            .length === 0;
+
+
+        messageInput.focus();
+
+      }
+
+    }
+
+
+    /* ========================================================
+       SEND BUTTON
+       ======================================================== */
+
+    sendButton.addEventListener(
+      "click",
+      sendMessage
+    );
+
+
+    /* ========================================================
+       ENTER TO SEND
+       ======================================================== */
+
+    messageInput.addEventListener(
+      "keydown",
+      (event) => {
+
+        /*
+          Enter sends.
+
+          Shift + Enter creates a new line.
+        */
+
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey
+        ) {
+
+          event.preventDefault();
+
+          sendMessage();
+
+        }
+
+      }
+    );
+
+
+    /* ========================================================
+       QUICK ACTIONS
+       ======================================================== */
+
+    document
+      .querySelectorAll(
+        ".quick-chip"
+      )
+      .forEach(
+        (button) => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              const prompt =
+                button.dataset.prompt ||
+                "";
+
+
+              messageInput.value =
+                prompt + " ";
+
+
+              resizeInput();
+
+
+              sendButton.disabled =
+                false;
+
+
+              messageInput.focus();
+
+            }
+          );
+
+        }
+      );
+
+
+    /* ========================================================
+       STARTUP
+       ======================================================== */
+
+    if (isTelegramMiniApp) {
+
+      resizeInput();
+
+    }
+
+  </script>
+
+</body>
+</html>
